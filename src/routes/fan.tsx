@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PoolSplit } from "@/components/pool-split";
+import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { useStudio, type Side } from "@/lib/studio-store";
 import { linkOutline, linkPrimary } from "@/lib/utils";
@@ -26,6 +27,7 @@ function FanHome() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center gap-5 p-6">
+      <BrandLogo />
       <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Fan</p>
       {live ? (
         <>

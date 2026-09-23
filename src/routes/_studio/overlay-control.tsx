@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStudio } from "@/lib/studio-store";
-import { linkOutlineSm } from "@/lib/utils";
+import { linkOutlineSm, linkPrimarySm } from "@/lib/utils";
 
 export const Route = createFileRoute("/_studio/overlay-control")({
   component: OverlayControl,
@@ -54,6 +54,9 @@ function OverlayControl() {
               <Copy className="size-3.5" />
             </Button>
           </div>
+          <Link to="/obs-overlay" className={`${linkPrimarySm} mt-3`}>
+            Preview browser source
+          </Link>
         </CardContent>
       </Card>
       <Card>
