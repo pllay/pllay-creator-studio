@@ -19,6 +19,8 @@ import {
   Search,
   Bell,
   LineChart,
+  Receipt,
+  User,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast, Toaster } from "sonner";
@@ -27,6 +29,7 @@ import { useStudio } from "@/lib/studio-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BrandLogo } from "@/components/brand-logo";
+import { FanBoardSync } from "@/components/fan-board-sync";
 
 const NAV = [
   {
@@ -34,6 +37,7 @@ const NAV = [
     items: [
       { title: "Dashboard", to: "/", icon: Home },
       { title: "Analytics", to: "/analytics", icon: LineChart },
+      { title: "Statement", to: "/statement", icon: Receipt },
     ],
   },
   {
@@ -60,6 +64,7 @@ const NAV = [
 
 const FOOTER = [
   { title: "Plans", to: "/plans", icon: Rocket },
+  { title: "Account", to: "/account", icon: User },
   { title: "Team", to: "/team", icon: Users },
   { title: "Support", to: "/support", icon: HelpCircle },
   { title: "Settings", to: "/settings", icon: Settings },
@@ -152,8 +157,6 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function StudioShell() {
-  const demo = useStudio((s) => s.demoBanner);
-  const dismiss = useStudio((s) => s.dismissDemo);
   const queue = useStudio(
     (s) =>
       s.moments.filter((m) => m.status === "under_review").length +
@@ -163,11 +166,50 @@ export function StudioShell() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [q, setQ] = useState("");
+  const pools = useStudio((s) => s.pools);
+  const moments = useStudio((s) => s.moments);
+  const vision = useStudio((s) => s.vision);
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!needle) return ALL_PAGES;
-    return ALL_PAGES.filter((p) => p.title.toLowerCase().includes(needle));
-  }, [q]);
+    const pages = (!needle ? ALL_PAGES : ALL_PAGES.filter((p) => p.title.toLowerCase().includes(needle))).map((p) => ({
+      key: p.to,
+      to: p.to,
+      title: p.title,
+      hint: "Page",
+      icon: p.icon,
+    }));
+    if (!needle) return pages;
+    const content = [
+      ...pools
+        .filter((pool) => `${pool.title} ${pool.question}`.toLowerCase().includes(needle))
+        .map((pool) => ({
+          key: pool.id,
+          to: "/predictions" as const,
+          title: pool.question,
+          hint: pool.status === "live" ? "Live pool" : "Settled pool",
+          icon: Zap,
+        })),
+      ...moments
+        .filter((moment) => moment.description.toLowerCase().includes(needle))
+        .map((moment) => ({
+          key: moment.id,
+          to: "/moment-agent" as const,
+          title: moment.description,
+          hint: "Moment",
+          icon: Sparkles,
+        })),
+      ...vision
+        .filter((hit) => `${hit.label} ${hit.detail}`.toLowerCase().includes(needle))
+        .map((hit) => ({
+          key: hit.id,
+          to: "/vision" as const,
+          title: hit.label,
+          hint: "Vision",
+          icon: ScanEye,
+        })),
+    ];
+    return [...pages, ...content].slice(0, 12);
+  }, [q, pools, moments, vision]);
 
   return (
     <div className="flex min-h-dvh bg-bg text-fg">
@@ -189,14 +231,6 @@ export function StudioShell() {
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="sticky top-0 z-[70]">
-        {demo ? (
-          <div className="flex items-center justify-center gap-3 bg-accent px-3 py-1.5 text-center font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-fg">
-            Studio preview — no real money
-            <button type="button" className="underline decoration-accent-fg/40" onClick={dismiss}>
-              Hide
-            </button>
-          </div>
-        ) : null}
         <header className="flex h-14 items-center gap-3 border-b border-line bg-bg/85 px-4 backdrop-blur-md">
           <Button
             variant="ghost"
@@ -255,7 +289,7 @@ export function StudioShell() {
           <Outlet />
         </main>
       </div>
-      {notesOpen ? <QueuePanel banner={demo} onClose={() => setNotesOpen(false)} /> : null}
+      {notesOpen ? <QueuePanel banner={false} onClose={() => setNotesOpen(false)} /> : null}
       {searchOpen ? (
         <div className="fixed inset-0 z-[60] flex items-start justify-center bg-bg/70 p-4 pt-24">
           <button type="button" className="absolute inset-0" aria-label="Close search" onClick={() => setSearchOpen(false)} />
@@ -264,28 +298,34 @@ export function StudioShell() {
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Jump to a page"
+              placeholder="Search pages, pools, and moments"
               aria-label="Search studio"
             />
             <div className="mt-2 max-h-64 overflow-auto">
-              {results.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => {
-                    setSearchOpen(false);
-                    setQ("");
-                  }}
-                  className="flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] px-2 text-sm text-fg hover:bg-elevated"
-                >
-                  <item.icon className="size-4 text-muted" />
-                  {item.title}
-                </Link>
-              ))}
+              {results.length === 0 ? (
+                <p className="px-2 py-3 text-sm text-muted">Nothing matches.</p>
+              ) : (
+                results.map((item) => (
+                  <Link
+                    key={item.key}
+                    to={item.to}
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setQ("");
+                    }}
+                    className="flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] px-2 text-sm text-fg hover:bg-elevated"
+                  >
+                    <item.icon className="size-4 shrink-0 text-muted" />
+                    <span className="min-w-0 flex-1 truncate">{item.title}</span>
+                    <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-subtle">{item.hint}</span>
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         </div>
       ) : null}
+      <FanBoardSync />
       <Toaster
         theme="dark"
         position="bottom-right"

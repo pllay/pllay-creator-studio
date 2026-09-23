@@ -28,7 +28,7 @@ function Arena() {
       <div className="mx-auto max-w-lg space-y-4">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Arena</p>
         <h1 className="font-display text-3xl font-semibold">Pit is empty</h1>
-        <p className="text-sm text-muted">Go live and Pulse opens one sandbox matchup. Settlement stays with you.</p>
+        <p className="text-sm text-muted">Go live and Pulse opens one matchup. Settlement stays with you.</p>
         <div className="flex flex-wrap gap-2">
           <Button onClick={goLive}>Go live</Button>
           <Link to="/pulse" className={linkOutline}>

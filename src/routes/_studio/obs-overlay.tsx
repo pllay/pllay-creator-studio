@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { OverlayCard } from "@/components/overlay-card";
+import { OverlayCard, useStreamCard } from "@/components/overlay-card";
 import { Button } from "@/components/ui/button";
 import { useStudio } from "@/lib/studio-store";
 import { linkOutline, linkPrimary } from "@/lib/utils";
@@ -13,15 +13,13 @@ export const Route = createFileRoute("/_studio/obs-overlay")({
 
 function ObsOverlay() {
   const channel = useStudio((s) => s.channel);
-  const sessionLive = useStudio((s) => s.sessionLive);
-  const pools = useStudio((s) => s.pools);
+  const { pool, fanLock, sessionLive } = useStreamCard();
   const slug = channel || "studio";
-  const current = pools.find((p) => p.status === "live") ?? pools[0];
   const [origin, setOrigin] = useState("");
   useEffect(() => {
     setOrigin(window.location.origin);
   }, []);
-  const url = origin ? `${origin}/overlay/${encodeURIComponent(slug)}?token=sandbox` : "";
+  const url = origin ? `${origin}/overlay/${encodeURIComponent(slug)}` : "";
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -57,7 +55,7 @@ function ObsOverlay() {
         }}
       >
         <div className="mx-auto w-full max-w-md">
-          <OverlayCard slug={slug} pool={current} sessionLive={sessionLive} />
+          <OverlayCard slug={slug} pool={pool} sessionLive={sessionLive} fanLock={fanLock} />
         </div>
       </div>
 

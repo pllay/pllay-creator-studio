@@ -22,18 +22,38 @@ export function StingerEngine() {
     let open = false;
     let settle = false;
     let vote = false;
+    let settledId: string | null = null;
     for (const [id, sig] of next) {
       const before = prev.get(id);
       if (!before) {
         if (sig.startsWith("live")) open = true;
-        else if (sig.startsWith("settled")) settle = true;
+        else if (sig.startsWith("settled")) {
+          settle = true;
+          settledId = id;
+        }
         continue;
       }
-      if (before.startsWith("live") && sig.startsWith("settled")) settle = true;
-      else if (before !== sig && before.startsWith("live") && sig.startsWith("live")) vote = true;
+      if (before.startsWith("live") && sig.startsWith("settled")) {
+        settle = true;
+        settledId = id;
+      } else if (before !== sig && before.startsWith("live") && sig.startsWith("live")) vote = true;
     }
     const armed = kitRef.current;
-    const cue: StingerKey | null = settle && armed.settle ? "settle" : open && armed.open ? "open" : vote && armed.vote ? "vote" : null;
+    const pool = settledId ? pools.find((item) => item.id === settledId) : undefined;
+    const lock = useStudio.getState().fanLock;
+    const fanHit = pool && lock && lock.poolId === pool.id ? pool.winner === lock.side : null;
+    const cue: StingerKey | null =
+      settle && fanHit === true && armed.hit
+        ? "hit"
+        : settle && fanHit === false && armed.miss
+          ? "miss"
+          : settle && armed.settle
+            ? "settle"
+            : open && armed.open
+              ? "open"
+              : vote && armed.vote
+                ? "vote"
+                : null;
     if (cue) playIfUnlocked(cue);
   }, [pools]);
 

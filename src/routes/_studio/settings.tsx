@@ -29,7 +29,7 @@ function SettingsPage() {
       <div>
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Settings</p>
         <h1 className="font-display text-3xl font-semibold">Studio</h1>
-        <p className="mt-1 text-sm text-muted">Signed in as kinggunn. This browser only.</p>
+        <p className="mt-1 text-sm text-muted">kinggunn · owner. This browser only.</p>
       </div>
 
       <Card className="space-y-3">
@@ -45,7 +45,7 @@ function SettingsPage() {
       </Card>
 
       <Card className="space-y-3">
-        <p className="text-sm font-medium">Clear sandbox</p>
+        <p className="text-sm font-medium">Clear session</p>
         <p className="text-sm text-muted">
           Drops pools, moments, seats, and vision on this browser. The session stops. Your sign-in stays.
         </p>
@@ -61,7 +61,7 @@ function SettingsPage() {
               setConfirm(false);
             }}
           >
-            {confirm ? "Confirm clear" : "Clear sandbox"}
+            {confirm ? "Confirm clear" : "Clear session"}
           </Button>
           {confirm ? (
             <Button variant="ghost" onClick={() => setConfirm(false)}>

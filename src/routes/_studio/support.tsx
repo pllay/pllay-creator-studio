@@ -9,10 +9,12 @@ export const Route = createFileRoute("/_studio/support")({
 
 const STEPS: { to: string; title: string; body: string }[] = [
   { to: "/vision", title: "Vision AI", body: "Pull a frame. It proposes a moment and never opens a pool." },
-  { to: "/moment-agent", title: "Moment Agent", body: "Confirm writes a draft. Approve opens one sandbox pool." },
+  { to: "/moment-agent", title: "Moment Agent", body: "Confirm writes a draft. Approve opens one pool." },
   { to: "/pulse", title: "Pulse", body: "You settle the winner here. The copilot cannot." },
   { to: "/obs-overlay", title: "OBS Overlay", body: "Copy the browser source. The checker is empty space." },
   { to: "/set-tools", title: "Set Tools", body: "Preview a stinger once so the browser allows sound." },
+  { to: "/statement", title: "Statement", body: "Your 15% is recorded. It is not paid out." },
+  { to: "/account", title: "Account", body: "Sign in with Google or X. Studio units stay on this browser." },
 ];
 
 function Support() {
@@ -37,7 +39,7 @@ function Support() {
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Support</p>
         <h1 className="font-display text-3xl font-semibold">How a pool goes live</h1>
         <p className="mt-1 max-w-xl text-sm text-muted">
-          Sandbox units only. PLLAY takes 0%. You keep 15% of a settled pool.
+          Studio units. No payouts. PLLAY takes 0%. You keep 15% of a settled pool.
         </p>
       </div>
 

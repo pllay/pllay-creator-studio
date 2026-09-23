@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudioRouteImport } from './routes/_studio'
 import { Route as FanRouteImport } from './routes/fan'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as StudioIndexRouteImport } from './routes/_studio/index'
+import { Route as StudioAccountRouteImport } from './routes/_studio/account'
 import { Route as StudioAnalyticsRouteImport } from './routes/_studio/analytics'
 import { Route as StudioArenaRouteImport } from './routes/_studio/arena'
 import { Route as StudioLeaderboardRouteImport } from './routes/_studio/leaderboard'
@@ -24,12 +26,14 @@ import { Route as StudioPulseRouteImport } from './routes/_studio/pulse'
 import { Route as StudioRivalsRouteImport } from './routes/_studio/rivals'
 import { Route as StudioSetToolsRouteImport } from './routes/_studio/set-tools'
 import { Route as StudioSettingsRouteImport } from './routes/_studio/settings'
+import { Route as StudioStatementRouteImport } from './routes/_studio/statement'
 import { Route as StudioSupportRouteImport } from './routes/_studio/support'
 import { Route as StudioTeamRouteImport } from './routes/_studio/team'
 import { Route as StudioVisionRouteImport } from './routes/_studio/vision'
 import { Route as OverlaySlugRouteImport } from './routes/overlay.$slug'
 import { Route as StudioPulseIndexRouteImport } from './routes/_studio/pulse/index'
 import { Route as StudioPulseOnboardingRouteImport } from './routes/_studio/pulse/onboarding'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const StudioRoute = StudioRouteImport.update({
   id: '/_studio',
@@ -40,9 +44,19 @@ const FanRoute = FanRouteImport.update({
   path: '/fan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudioIndexRoute = StudioIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => StudioRoute,
+} as any)
+const StudioAccountRoute = StudioAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => StudioRoute,
 } as any)
 const StudioAnalyticsRoute = StudioAnalyticsRouteImport.update({
@@ -105,6 +119,11 @@ const StudioSettingsRoute = StudioSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => StudioRoute,
 } as any)
+const StudioStatementRoute = StudioStatementRouteImport.update({
+  id: '/statement',
+  path: '/statement',
+  getParentRoute: () => StudioRoute,
+} as any)
 const StudioSupportRoute = StudioSupportRouteImport.update({
   id: '/support',
   path: '/support',
@@ -135,10 +154,17 @@ const StudioPulseOnboardingRoute = StudioPulseOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => StudioPulseRoute,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof StudioIndexRoute
   '/fan': typeof FanRoute
+  '/login': typeof LoginRoute
+  '/account': typeof StudioAccountRoute
   '/analytics': typeof StudioAnalyticsRoute
   '/arena': typeof StudioArenaRoute
   '/leaderboard': typeof StudioLeaderboardRoute
@@ -151,15 +177,19 @@ export interface FileRoutesByFullPath {
   '/rivals': typeof StudioRivalsRoute
   '/set-tools': typeof StudioSetToolsRoute
   '/settings': typeof StudioSettingsRoute
+  '/statement': typeof StudioStatementRoute
   '/support': typeof StudioSupportRoute
   '/team': typeof StudioTeamRoute
   '/vision': typeof StudioVisionRoute
   '/overlay/$slug': typeof OverlaySlugRoute
   '/pulse/onboarding': typeof StudioPulseOnboardingRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/pulse/': typeof StudioPulseIndexRoute
 }
 export interface FileRoutesByTo {
   '/fan': typeof FanRoute
+  '/login': typeof LoginRoute
+  '/account': typeof StudioAccountRoute
   '/analytics': typeof StudioAnalyticsRoute
   '/arena': typeof StudioArenaRoute
   '/leaderboard': typeof StudioLeaderboardRoute
@@ -171,18 +201,22 @@ export interface FileRoutesByTo {
   '/rivals': typeof StudioRivalsRoute
   '/set-tools': typeof StudioSetToolsRoute
   '/settings': typeof StudioSettingsRoute
+  '/statement': typeof StudioStatementRoute
   '/support': typeof StudioSupportRoute
   '/team': typeof StudioTeamRoute
   '/vision': typeof StudioVisionRoute
   '/overlay/$slug': typeof OverlaySlugRoute
   '/': typeof StudioIndexRoute
   '/pulse/onboarding': typeof StudioPulseOnboardingRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/pulse': typeof StudioPulseIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_studio': typeof StudioRouteWithChildren
   '/fan': typeof FanRoute
+  '/login': typeof LoginRoute
+  '/_studio/account': typeof StudioAccountRoute
   '/_studio/analytics': typeof StudioAnalyticsRoute
   '/_studio/arena': typeof StudioArenaRoute
   '/_studio/leaderboard': typeof StudioLeaderboardRoute
@@ -195,12 +229,14 @@ export interface FileRoutesById {
   '/_studio/rivals': typeof StudioRivalsRoute
   '/_studio/set-tools': typeof StudioSetToolsRoute
   '/_studio/settings': typeof StudioSettingsRoute
+  '/_studio/statement': typeof StudioStatementRoute
   '/_studio/support': typeof StudioSupportRoute
   '/_studio/team': typeof StudioTeamRoute
   '/_studio/vision': typeof StudioVisionRoute
   '/overlay/$slug': typeof OverlaySlugRoute
   '/_studio/': typeof StudioIndexRoute
   '/_studio/pulse/onboarding': typeof StudioPulseOnboardingRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/_studio/pulse/': typeof StudioPulseIndexRoute
 }
 export interface FileRouteTypes {
@@ -208,6 +244,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/fan'
+    | '/login'
+    | '/account'
     | '/analytics'
     | '/arena'
     | '/leaderboard'
@@ -220,15 +258,19 @@ export interface FileRouteTypes {
     | '/rivals'
     | '/set-tools'
     | '/settings'
+    | '/statement'
     | '/support'
     | '/team'
     | '/vision'
     | '/overlay/$slug'
     | '/pulse/onboarding'
+    | '/api/auth/$'
     | '/pulse/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/fan'
+    | '/login'
+    | '/account'
     | '/analytics'
     | '/arena'
     | '/leaderboard'
@@ -240,17 +282,21 @@ export interface FileRouteTypes {
     | '/rivals'
     | '/set-tools'
     | '/settings'
+    | '/statement'
     | '/support'
     | '/team'
     | '/vision'
     | '/overlay/$slug'
     | '/'
     | '/pulse/onboarding'
+    | '/api/auth/$'
     | '/pulse'
   id:
     | '__root__'
     | '/_studio'
     | '/fan'
+    | '/login'
+    | '/_studio/account'
     | '/_studio/analytics'
     | '/_studio/arena'
     | '/_studio/leaderboard'
@@ -263,19 +309,23 @@ export interface FileRouteTypes {
     | '/_studio/rivals'
     | '/_studio/set-tools'
     | '/_studio/settings'
+    | '/_studio/statement'
     | '/_studio/support'
     | '/_studio/team'
     | '/_studio/vision'
     | '/overlay/$slug'
     | '/_studio/'
     | '/_studio/pulse/onboarding'
+    | '/api/auth/$'
     | '/_studio/pulse/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   StudioRoute: typeof StudioRouteWithChildren
   FanRoute: typeof FanRoute
+  LoginRoute: typeof LoginRoute
   OverlaySlugRoute: typeof OverlaySlugRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -294,11 +344,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_studio/': {
       id: '/_studio/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof StudioIndexRouteImport
+      parentRoute: typeof StudioRoute
+    }
+    '/_studio/account': {
+      id: '/_studio/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof StudioAccountRouteImport
       parentRoute: typeof StudioRoute
     }
     '/_studio/analytics': {
@@ -385,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioSettingsRouteImport
       parentRoute: typeof StudioRoute
     }
+    '/_studio/statement': {
+      id: '/_studio/statement'
+      path: '/statement'
+      fullPath: '/statement'
+      preLoaderRoute: typeof StudioStatementRouteImport
+      parentRoute: typeof StudioRoute
+    }
     '/_studio/support': {
       id: '/_studio/support'
       path: '/support'
@@ -427,6 +498,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioPulseOnboardingRouteImport
       parentRoute: typeof StudioPulseRoute
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -445,6 +523,7 @@ const StudioPulseRouteWithChildren = StudioPulseRoute._addFileChildren(
 )
 
 interface StudioRouteChildren {
+  StudioAccountRoute: typeof StudioAccountRoute
   StudioAnalyticsRoute: typeof StudioAnalyticsRoute
   StudioArenaRoute: typeof StudioArenaRoute
   StudioLeaderboardRoute: typeof StudioLeaderboardRoute
@@ -457,6 +536,7 @@ interface StudioRouteChildren {
   StudioRivalsRoute: typeof StudioRivalsRoute
   StudioSetToolsRoute: typeof StudioSetToolsRoute
   StudioSettingsRoute: typeof StudioSettingsRoute
+  StudioStatementRoute: typeof StudioStatementRoute
   StudioSupportRoute: typeof StudioSupportRoute
   StudioTeamRoute: typeof StudioTeamRoute
   StudioVisionRoute: typeof StudioVisionRoute
@@ -464,6 +544,7 @@ interface StudioRouteChildren {
 }
 
 const StudioRouteChildren: StudioRouteChildren = {
+  StudioAccountRoute: StudioAccountRoute,
   StudioAnalyticsRoute: StudioAnalyticsRoute,
   StudioArenaRoute: StudioArenaRoute,
   StudioLeaderboardRoute: StudioLeaderboardRoute,
@@ -476,6 +557,7 @@ const StudioRouteChildren: StudioRouteChildren = {
   StudioRivalsRoute: StudioRivalsRoute,
   StudioSetToolsRoute: StudioSetToolsRoute,
   StudioSettingsRoute: StudioSettingsRoute,
+  StudioStatementRoute: StudioStatementRoute,
   StudioSupportRoute: StudioSupportRoute,
   StudioTeamRoute: StudioTeamRoute,
   StudioVisionRoute: StudioVisionRoute,
@@ -488,7 +570,9 @@ const StudioRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   StudioRoute: StudioRouteWithChildren,
   FanRoute: FanRoute,
+  LoginRoute: LoginRoute,
   OverlaySlugRoute: OverlaySlugRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

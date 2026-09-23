@@ -19,7 +19,7 @@ function OverlayControl() {
   useEffect(() => {
     setOrigin(window.location.origin);
   }, []);
-  const url = origin ? `${origin}/overlay/${encodeURIComponent(slug)}?token=sandbox` : "Generating overlay URL…";
+  const url = origin ? `${origin}/overlay/${encodeURIComponent(slug)}` : "Generating overlay URL…";
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -73,7 +73,7 @@ function OverlayControl() {
           <div className="mt-3 space-y-2">
             {pools.map((p) => {
               const predUrl = origin
-                ? `${origin}/overlay/${encodeURIComponent(slug)}?prediction=${p.id}&token=sandbox`
+                ? `${origin}/overlay/${encodeURIComponent(slug)}?prediction=${p.id}`
                 : "";
               return (
                 <div key={p.id} className="flex items-center gap-2">

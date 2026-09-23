@@ -22,7 +22,7 @@ function PulseDashboard() {
   if (!studio.sourceConnected) {
     return (
       <div className="mx-auto max-w-lg space-y-3 py-10 text-sm text-muted">
-        <p>No content source yet. Go live to connect a sandbox channel and auto-publish.</p>
+        <p>No content source yet. Go live to connect a channel and publish.</p>
         <Button onClick={studio.goLive}>Go live</Button>
       </div>
     );
@@ -91,7 +91,7 @@ function PulseDashboard() {
         </CardHeader>
         <CardContent>
           <p className="font-mono text-sm">{studio.channel}</p>
-          <p className="text-xs text-muted">Sandbox workspace</p>
+          <p className="text-xs text-muted">Creator workspace</p>
         </CardContent>
       </Card>
 

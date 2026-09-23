@@ -25,7 +25,7 @@ function Dashboard() {
         <span className="text-accent"> PLLAY takes 0%.</span>
       </h1>
       <p className="max-w-xl text-sm leading-relaxed text-muted">
-        Winners split 85%. Live auto-publishes one sandbox pool. You still settle the winner.
+        Winners split 85%. Live publishes one pool. You still settle the winner.
       </p>
       <div className="flex flex-wrap gap-2">
         {session && mode === "AUTO_PUBLISH" ? (

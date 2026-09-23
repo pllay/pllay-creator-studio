@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { creatorShare, poolTotal, useStudio } from "@/lib/studio-store";
-import { linkPrimary } from "@/lib/utils";
+import { linkOutline, linkPrimary } from "@/lib/utils";
 
 export const Route = createFileRoute("/_studio/analytics")({
   component: Analytics,
@@ -13,16 +13,20 @@ function Analytics() {
   const earnings = pools.filter((p) => p.status === "settled").reduce((n, p) => n + creatorShare(p), 0);
   const live = pools.filter((p) => p.status === "live").length;
   const settled = pools.filter((p) => p.status === "settled").length;
+  const results = useStudio((s) => s.fanResults);
+  const hits = results.filter((row) => row.hit).length;
+  const rate = results.length === 0 ? "—" : `${Math.round((hits / results.length) * 100)}%`;
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Analytics</p>
-      <h1 className="font-display text-3xl font-semibold">Sandbox totals</h1>
-      <p className="text-sm text-muted">Creator cut is 15% of settled pools. PLLAY takes 0%.</p>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <h1 className="font-display text-3xl font-semibold">Session totals</h1>
+      <p className="text-sm text-muted">Creator cut is 15% of settled pools. PLLAY takes 0%. Nothing here is paid out.</p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Volume" value={String(volume)} />
         <Stat label="Your 15%" value={String(earnings)} />
         <Stat label="Live / settled" value={`${live} / ${settled}`} />
+        <Stat label="Fan hit rate" value={rate} />
       </div>
       {pools.length === 0 ? (
         <p className="text-sm text-muted">No pools yet. Approve a Pulse moment or create a pool.</p>
@@ -41,9 +45,14 @@ function Analytics() {
           ))}
         </div>
       )}
-      <Link to="/predictions" className={linkPrimary}>
-        Open pools
-      </Link>
+      <div className="flex flex-wrap gap-2">
+        <Link to="/predictions" className={linkPrimary}>
+          Open pools
+        </Link>
+        <Link to="/statement" className={linkOutline}>
+          Statement
+        </Link>
+      </div>
     </div>
   );
 }

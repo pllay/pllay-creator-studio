@@ -26,6 +26,16 @@ const KIT: { key: StingerKey; title: string; detail: string }[] = [
     title: "Fan lock-in",
     detail: "Off by default. Crowd votes would chirp every few seconds.",
   },
+  {
+    key: "hit",
+    title: "Fan hit",
+    detail: "Plays when you settle the side the fan locked.",
+  },
+  {
+    key: "miss",
+    title: "Fan miss",
+    detail: "Plays when you settle the other side.",
+  },
 ];
 
 function SetTools() {

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useStudio } from "@/lib/studio-store";
+import { useStudio, type FanLock, type Pool } from "@/lib/studio-store";
 import { linkOutlineSm } from "@/lib/utils";
 
 export const Route = createFileRoute("/_studio/predictions")({
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_studio/predictions")({
 
 function Predictions() {
   const pools = useStudio((s) => s.pools);
+  const fanLock = useStudio((s) => s.fanLock);
   const createPool = useStudio((s) => s.createPool);
   const settlePool = useStudio((s) => s.settlePool);
   const [title, setTitle] = useState("");
@@ -26,7 +27,7 @@ function Predictions() {
       <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Predictions</p>
       <h1 className="font-display text-3xl font-semibold">Pools</h1>
       <p className="text-sm text-muted">
-        Launch a sandbox pool. Approve a Pulse draft to publish one automatically. Settlement is creator-only.
+        Launch a pool. Approve a Pulse draft to publish one automatically. Settlement is creator-only.
       </p>
       <Card className="space-y-3">
         <Label htmlFor="title">Title</Label>
@@ -44,7 +45,7 @@ function Predictions() {
             createPool(title, question);
             setTitle("");
             setQuestion("");
-            toast.success("Pool is live in sandbox");
+            toast.success("Pool is live");
           }}
         >
           Create pool
@@ -57,13 +58,14 @@ function Predictions() {
           {pools.map((p) => (
             <Card key={p.id} className="space-y-3">
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium">{p.title}</p>
-                  <p className="text-xs text-muted">{p.question}</p>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{p.title}</p>
+                  <p className="text-pretty text-xs text-muted">{p.question}</p>
                 </div>
                 <Badge tone={p.status === "live" ? "ok" : "neutral"}>{p.status}</Badge>
               </div>
               <PoolSplit pool={p} />
+              <p className="text-xs text-muted">{fanNote(p, fanLock)}</p>
               {p.status === "live" ? (
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={() => settlePool(p.id, "a")}>
@@ -85,4 +87,11 @@ function Predictions() {
       )}
     </div>
   );
+}
+
+function fanNote(pool: Pool, lock: FanLock | null) {
+  if (!lock || lock.poolId !== pool.id) return pool.status === "settled" ? "No fan lock." : "No fan lock yet.";
+  const side = lock.side === "a" ? pool.aLabel : pool.bLabel;
+  if (pool.status === "live") return `${lock.name} locked ${lock.stake} on ${side}.`;
+  return `${lock.name} locked ${lock.stake} on ${side}. ${pool.winner === lock.side ? "They hit it." : "They missed it."}`;
 }

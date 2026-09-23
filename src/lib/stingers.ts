@@ -1,4 +1,4 @@
-export type StingerKey = "open" | "settle" | "vote";
+export type StingerKey = "open" | "settle" | "vote" | "hit" | "miss";
 
 let ctx: AudioContext | null = null;
 let unlocked = false;
@@ -32,6 +32,16 @@ function schedule(kind: StingerKey, c: AudioContext) {
   if (kind === "settle") {
     tone(c, 392, t, 0.18, 0.06);
     tone(c, 262, t + 0.06, 0.22, 0.04);
+    return;
+  }
+  if (kind === "hit") {
+    tone(c, 659, t, 0.08, 0.05);
+    tone(c, 880, t + 0.07, 0.16, 0.05);
+    return;
+  }
+  if (kind === "miss") {
+    tone(c, 220, t, 0.16, 0.05);
+    tone(c, 165, t + 0.08, 0.18, 0.04);
     return;
   }
   tone(c, 1320, t, 0.045, 0.03);

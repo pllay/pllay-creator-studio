@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand-logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { draftMoment } from "@/lib/draft-moment";
 import { useStudio } from "@/lib/studio-store";
 import { linkOutline, linkPrimary } from "@/lib/utils";
 
@@ -17,7 +19,9 @@ function Vision() {
   const hits = useStudio((s) => s.vision);
   const capture = useStudio((s) => s.captureFrame);
   const propose = useStudio((s) => s.proposeVision);
+  const proposeText = useStudio((s) => s.proposeVisionText);
   const goLive = useStudio((s) => s.goLive);
+  const [asking, setAsking] = useState<string | null>(null);
   const latest = hits[0];
   const waiting = hits.filter((h) => !h.proposed).length;
 
@@ -61,7 +65,7 @@ function Vision() {
               <p className="mt-1 max-w-md text-sm text-muted">
                 {latest
                   ? latest.detail
-                  : "Capture reads the sandbox stream. Nothing here calls a remote vision function."}
+                  : "Capture reads the live stream. Ask Grok writes one question. It does not settle."}
               </p>
             </div>
             <div>
@@ -100,15 +104,37 @@ function Vision() {
                     <span className="font-mono text-[10px] tabular-nums text-subtle">{hit.confidence.toFixed(2)}</span>
                   </div>
                   <p className="mt-1 text-xs text-muted">{hit.detail}</p>
-                  <Button
-                    size="sm"
-                    className="mt-2"
-                    variant={hit.proposed ? "outline" : "default"}
-                    disabled={hit.proposed}
-                    onClick={() => propose(hit.id)}
-                  >
-                    {hit.proposed ? "In Moment Agent" : "Propose"}
-                  </Button>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={hit.proposed ? "outline" : "default"}
+                      disabled={hit.proposed}
+                      onClick={() => propose(hit.id)}
+                    >
+                      {hit.proposed ? "In Moment Agent" : "Propose"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={hit.proposed || asking === hit.id}
+                      onClick={() => {
+                        setAsking(hit.id);
+                        void draftMoment({ data: { label: hit.label, detail: hit.detail } })
+                          .then((result) => {
+                            if (!result.ok) {
+                              toast.error(result.error);
+                              return;
+                            }
+                            proposeText(hit.id, result.text);
+                            toast.success("Draft is under review");
+                          })
+                          .catch(() => toast.error("Sign in on Account first."))
+                          .finally(() => setAsking(null));
+                      }}
+                    >
+                      {asking === hit.id ? "Asking…" : "Ask Grok"}
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>

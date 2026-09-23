@@ -25,7 +25,7 @@ const MODES: { value: AgentMode; label: string; help: string }[] = [
   { value: "OFF", label: "Off", help: "No AI-generated interactions." },
   { value: "SUGGEST", label: "Suggest", help: "Generates drafts only — you publish." },
   { value: "APPROVAL_REQUIRED", label: "Approval required", help: "Drafts route to your queue." },
-  { value: "AUTO_PUBLISH", label: "Live", help: "Publishes one sandbox pool. You still settle." },
+  { value: "AUTO_PUBLISH", label: "Live", help: "Publishes one pool. You still settle." },
 ];
 
 function Onboarding() {
@@ -77,13 +77,13 @@ function Onboarding() {
             </div>
           ) : null}
           {step === 2 ? (
-            <p className="text-sm text-muted">Live and replay are both enabled for this sandbox source.</p>
+            <p className="text-sm text-muted">Live and replay are both on for this source.</p>
           ) : null}
           {step === 3 ? (
             <p className="text-sm text-muted">Default categories: live_prediction, poll, audience_decision.</p>
           ) : null}
           {step === 4 ? (
-            <p className="text-sm text-muted">Max 6 interactions per hour in the sandbox.</p>
+            <p className="text-sm text-muted">Max 6 interactions per hour.</p>
           ) : null}
           {step === 5 ? (
             <p className="text-sm text-muted">Blocked topics stay empty unless you add them later in Settings.</p>
@@ -107,7 +107,7 @@ function Onboarding() {
           ) : null}
           {step === 7 ? (
             <div className="space-y-3">
-              <p className="text-sm text-muted">Go live to auto-publish a sandbox pool. Settlement stays with you.</p>
+              <p className="text-sm text-muted">Go live to publish a pool. Settlement stays with you.</p>
               <Button
                 onClick={() => {
                   studio.goLive();

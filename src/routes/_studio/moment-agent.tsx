@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { draftMoment } from "@/lib/draft-moment";
 import { draftPrompt, useStudio } from "@/lib/studio-store";
 import { linkOutline, linkPrimary } from "@/lib/utils";
 
@@ -17,6 +20,8 @@ function MomentAgent() {
   const reviewMoment = useStudio((s) => s.reviewMoment);
   const reviewDraft = useStudio((s) => s.reviewDraft);
   const pullEvidence = useStudio((s) => s.pullEvidence);
+  const rewriteMoment = useStudio((s) => s.rewriteMoment);
+  const [asking, setAsking] = useState(false);
   const waiting = moments.filter((m) => m.status === "under_review");
   const current = waiting[0];
   const drafts = reviews.filter((r) => r.status === "pending");
@@ -29,7 +34,7 @@ function MomentAgent() {
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Moment Agent</p>
           <h1 className="font-display text-3xl font-semibold">Copilot</h1>
           <p className="mt-1 max-w-xl text-sm text-muted">
-            Confirm writes a draft. Approve opens one sandbox pool. This desk never settles a winner.
+            Confirm writes a draft. Approve opens one pool. This desk never settles a winner.
           </p>
         </div>
         <Button onClick={pullEvidence}>Pull evidence</Button>
@@ -62,6 +67,27 @@ function MomentAgent() {
                 <Button variant="outline" onClick={() => reviewMoment(current.id, "rejected")}>
                   Skip
                 </Button>
+                <Button
+                  variant="outline"
+                  disabled={asking}
+                  onClick={() => {
+                    const moment = current;
+                    setAsking(true);
+                    void draftMoment({ data: { label: moment.description, detail: "Rewrite the interaction question. Do not settle." } })
+                      .then((result) => {
+                        if (!result.ok) {
+                          toast.error(result.error);
+                          return;
+                        }
+                        rewriteMoment(moment.id, result.text);
+                        toast.success("Draft rewritten. Still under review.");
+                      })
+                      .catch(() => toast.error("Sign in on Account first."))
+                      .finally(() => setAsking(false));
+                  }}
+                >
+                  {asking ? "Asking…" : "Ask Grok"}
+                </Button>
                 <Button onClick={() => reviewMoment(current.id, "confirmed")}>Confirm moment</Button>
               </div>
             </div>
@@ -80,7 +106,7 @@ function MomentAgent() {
           <p className="mt-1 text-xs text-muted">
             {drafts.length === 0
               ? "No drafts. Confirm a moment to write one."
-              : "Approve opens one sandbox pool. You still pick the winner."}
+              : "Approve opens one pool. You still pick the winner."}
           </p>
           {drafts.length === 0 ? null : (
             <ul className="mt-3 space-y-2">

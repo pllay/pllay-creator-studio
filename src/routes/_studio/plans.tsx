@@ -26,7 +26,7 @@ function Plans() {
       <Card className="space-y-3">
         <Badge tone="ok">Beta</Badge>
         <p className="font-display text-3xl font-semibold tabular-nums">{earned}</p>
-        <p className="text-sm text-muted">Sandbox cut from settled pools. PLLAY takes 0%. {seats.length} of 4 seats used.</p>
+        <p className="text-sm text-muted">Your cut from settled pools. PLLAY takes 0%. {seats.length} of 4 seats used.</p>
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -42,7 +42,7 @@ function Plans() {
           <p className="font-display text-lg font-semibold">Studio</p>
           <ul className="mt-2 space-y-1 text-sm text-muted">
             <li>Everything in Pro</li>
-            <li>4 seats, no invites sent</li>
+            <li>4 seats, each with an invite link</li>
             <li>Support shows the live path</li>
           </ul>
         </Card>
@@ -52,8 +52,8 @@ function Plans() {
         <Link to="/analytics" className={linkOutline}>
           Analytics
         </Link>
-        <Link to="/team" className={linkOutline}>
-          Team
+        <Link to="/statement" className={linkOutline}>
+          Statement
         </Link>
       </div>
     </div>
