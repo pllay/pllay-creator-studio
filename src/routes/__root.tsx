@@ -2,6 +2,7 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { LiveEngine } from "@/components/live-engine";
+import { StingerEngine } from "@/components/stinger-engine";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "PLLAY Creator";
@@ -38,6 +39,7 @@ export const Route = createRootRoute({
         <PreviewHostBridge />
         <AuthProvider>
           <LiveEngine />
+          <StingerEngine />
           <Outlet />
         </AuthProvider>
         <Scripts />

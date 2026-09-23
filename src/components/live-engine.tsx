@@ -6,11 +6,20 @@ export function LiveEngine() {
   const mode = useStudio((s) => s.mode);
 
   useEffect(() => {
-    const t = window.setTimeout(() => {
+    let cancel = false;
+    let started = false;
+    const boot = () => {
+      if (cancel || started) return;
+      started = true;
       const s = useStudio.getState();
       if (!s.sessionLive || s.mode !== "AUTO_PUBLISH") s.goLive();
-    }, 0);
-    return () => window.clearTimeout(t);
+    };
+    if (useStudio.persist.hasHydrated()) boot();
+    const unsub = useStudio.persist.onFinishHydration(boot);
+    return () => {
+      cancel = true;
+      unsub();
+    };
   }, []);
 
   useEffect(() => {

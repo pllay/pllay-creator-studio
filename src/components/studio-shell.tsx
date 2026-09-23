@@ -18,6 +18,7 @@ import {
   PanelLeft,
   Search,
   Bell,
+  LineChart,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast, Toaster } from "sonner";
@@ -25,11 +26,15 @@ import { cn } from "@/lib/utils";
 import { useStudio } from "@/lib/studio-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BrandLogo } from "@/components/brand-logo";
 
 const NAV = [
   {
     label: "Overview",
-    items: [{ title: "Dashboard", to: "/", icon: Home }],
+    items: [
+      { title: "Dashboard", to: "/", icon: Home },
+      { title: "Analytics", to: "/analytics", icon: LineChart },
+    ],
   },
   {
     label: "Stream Setup",
@@ -99,9 +104,9 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const navigate = useNavigate();
   return (
     <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-line bg-surface">
-      <div className="flex h-14 items-center border-b border-line px-4">
-        <span className="font-display text-lg font-semibold tracking-[0.18em]">PLLAY</span>
-      </div>
+      <Link to="/" onClick={onNavigate} className="flex h-14 items-center border-b border-line px-4">
+        <BrandLogo />
+      </Link>
       <nav className="flex-1 space-y-5 overflow-y-auto px-2 py-4">
         {NAV.map((section) => (
           <div key={section.label}>
@@ -149,8 +154,14 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 export function StudioShell() {
   const demo = useStudio((s) => s.demoBanner);
   const dismiss = useStudio((s) => s.dismissDemo);
+  const queue = useStudio(
+    (s) =>
+      s.moments.filter((m) => m.status === "under_review").length +
+      s.reviews.filter((r) => r.status === "pending").length,
+  );
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
   const [q, setQ] = useState("");
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -177,6 +188,7 @@ export function StudioShell() {
         </div>
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
+        <div className="sticky top-0 z-[70]">
         {demo ? (
           <div className="flex items-center justify-center gap-3 bg-accent px-3 py-1.5 text-center font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-fg">
             Studio preview — no real money
@@ -185,7 +197,7 @@ export function StudioShell() {
             </button>
           </div>
         ) : null}
-        <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-line bg-bg/85 px-4 backdrop-blur-md">
+        <header className="flex h-14 items-center gap-3 border-b border-line bg-bg/85 px-4 backdrop-blur-md">
           <Button
             variant="ghost"
             size="icon"
@@ -196,31 +208,54 @@ export function StudioShell() {
           >
             <PanelLeft className="size-4" />
           </Button>
+          <Link to="/" className="md:hidden">
+            <BrandLogo className="h-6" />
+          </Link>
           <div className="flex-1" />
           <button
             type="button"
-            onClick={() => setSearchOpen(true)}
+            onClick={() => {
+              setNotesOpen(false);
+              setSearchOpen(true);
+            }}
             className="hidden items-center gap-2 rounded-[var(--radius-sm)] border border-line px-3 py-1.5 text-xs text-subtle hover:text-fg sm:flex"
           >
             <Search className="size-3.5" />
             Search
           </button>
-          <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Search" onClick={() => setSearchOpen(true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="sm:hidden"
+            aria-label="Search"
+            onClick={() => {
+              setNotesOpen(false);
+              setSearchOpen(true);
+            }}
+          >
             <Search className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Notifications"
-            onClick={() => toast.message("No notifications")}
+            className="relative"
+            aria-label={queue > 0 ? `${queue} waiting in Pulse` : "Notifications"}
+            aria-expanded={notesOpen}
+            onClick={() => {
+              setSearchOpen(false);
+              setNotesOpen((v) => !v);
+            }}
           >
             <Bell className="size-4" />
+            {queue > 0 ? <span className="absolute right-1 top-1 size-1.5 rounded-full bg-accent" /> : null}
           </Button>
         </header>
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        </div>
+        <main className={cn("flex-1 overflow-auto p-4 sm:p-6 lg:p-8", notesOpen && "sm:!pr-[24rem]")}>
           <Outlet />
         </main>
       </div>
+      {notesOpen ? <QueuePanel banner={demo} onClose={() => setNotesOpen(false)} /> : null}
       {searchOpen ? (
         <div className="fixed inset-0 z-[60] flex items-start justify-center bg-bg/70 p-4 pt-24">
           <button type="button" className="absolute inset-0" aria-label="Close search" onClick={() => setSearchOpen(false)} />
@@ -258,6 +293,75 @@ export function StudioShell() {
           className: "bg-surface border-line text-fg",
         }}
       />
+    </div>
+  );
+}
+
+function QueuePanel({ banner, onClose }: { banner: boolean; onClose: () => void }) {
+  const moments = useStudio((s) => s.moments);
+  const reviews = useStudio((s) => s.reviews);
+  const pools = useStudio((s) => s.pools);
+  const items = [
+    ...moments
+      .filter((moment) => moment.status === "under_review")
+      .map((moment) => ({
+        id: moment.id,
+        to: "/moment-agent" as const,
+        title: "Under review",
+        body: moment.description,
+      })),
+    ...reviews
+      .filter((review) => review.status === "pending")
+      .map((review) => ({
+        id: review.id,
+        to: "/moment-agent" as const,
+        title: "Draft",
+        body: review.prompt,
+      })),
+    ...pools
+      .filter((pool) => pool.status === "live")
+      .map((pool) => ({
+        id: pool.id,
+        to: "/predictions" as const,
+        title: "Live pool",
+        body: pool.question,
+      })),
+  ].slice(0, 6);
+
+  return (
+    <div className="fixed inset-0 z-[60]">
+      <button
+        type="button"
+        className="absolute inset-0 bg-bg sm:bg-transparent"
+        aria-label="Close notifications"
+        onClick={onClose}
+      />
+      <div
+        className={cn(
+          "absolute left-3 right-3 rounded-[var(--radius-lg)] border border-line bg-surface p-3 sm:left-auto sm:right-4 sm:w-[22rem]",
+          banner ? "top-[5.75rem]" : "top-16",
+        )}
+      >
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Queue</p>
+        {items.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">Queue is clear.</p>
+        ) : (
+          <ul className="mt-2 space-y-1">
+            {items.map((item) => (
+              <li key={item.id}>
+                <Link
+                  to={item.to}
+                  onClick={onClose}
+                  className="block rounded-[var(--radius-sm)] px-2 py-2 hover:bg-elevated"
+                >
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-subtle">{item.title}</p>
+                  <p className="truncate text-sm">{item.body}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

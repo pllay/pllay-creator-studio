@@ -1,5 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { StingerKey } from "@/lib/stingers";
+
+export type { StingerKey };
 
 export type AgentMode = "OFF" | "SUGGEST" | "APPROVAL_REQUIRED" | "AUTO_PUBLISH";
 export type Side = "a" | "b";
@@ -11,11 +14,32 @@ export interface DetectedMoment {
   status: "under_review" | "confirmed" | "rejected";
 }
 
+export interface VisionHit {
+  id: string;
+  label: string;
+  detail: string;
+  confidence: number;
+  proposed: boolean;
+}
 export interface DraftReview {
   id: string;
   prompt: string;
   explanation: string;
   status: "pending" | "approved" | "rejected";
+}
+
+export interface StingerKit {
+  open: boolean;
+  settle: boolean;
+  vote: boolean;
+}
+
+export type SeatRole = "producer" | "mod";
+
+export interface Seat {
+  id: string;
+  name: string;
+  role: SeatRole;
 }
 
 export interface Pool {
@@ -43,6 +67,9 @@ interface StudioState {
   moments: DetectedMoment[];
   reviews: DraftReview[];
   pools: Pool[];
+  vision: VisionHit[];
+  stingers: StingerKit;
+  seats: Seat[];
   dismissDemo: () => void;
   connectSource: (channel: string) => void;
   setOnboardingStep: (step: number) => void;
@@ -57,12 +84,61 @@ interface StudioState {
   settlePool: (poolId: string, winner: Side) => void;
   goLive: () => void;
   crowdTick: () => void;
+  captureFrame: () => void;
+  proposeVision: (id: string) => void;
+  pullEvidence: () => void;
+  setStinger: (key: StingerKey, armed: boolean) => void;
+  addSeat: (name: string, role: SeatRole) => void;
+  removeSeat: (id: string) => void;
   reset: () => void;
 }
 
 function uid() {
   return crypto.randomUUID();
 }
+
+export function channelSlug(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 32);
+}
+
+export function draftPrompt(description: string) {
+  const text = description.trim();
+  if (!text) return "Who takes the next round?";
+  return `Who takes the next round after: ${text.toLowerCase()}?`;
+}
+
+const VISION_FRAMES = [
+  {
+    label: "Kill feed spike",
+    detail: "Four eliminations in 11 seconds. Interaction-worthy, not a settle.",
+    confidence: 0.93,
+  },
+  {
+    label: "Overtime locked",
+    detail: "Score bug flipped. Outcome is still open.",
+    confidence: 0.88,
+  },
+  {
+    label: "1v1 utility empty",
+    detail: "Player cam on both sides with no utility left.",
+    confidence: 0.81,
+  },
+  {
+    label: "Chat velocity spike",
+    detail: "Chat is 6× baseline on a clutch line.",
+    confidence: 0.76,
+  },
+  {
+    label: "Bomb timer under 8s",
+    detail: "Round clock is inside the plant window.",
+    confidence: 0.9,
+  },
+];
 
 const SAMPLE_MOMENTS = [
   {
@@ -106,6 +182,9 @@ const INITIAL = {
   moments: [] as DetectedMoment[],
   reviews: [] as DraftReview[],
   pools: [] as Pool[],
+  vision: [] as VisionHit[],
+  stingers: { open: true, settle: true, vote: false },
+  seats: [] as Seat[],
 };
 
 export function poolTotal(p: Pool) {
@@ -137,7 +216,7 @@ export const useStudio = create<StudioState>()(
       ...INITIAL,
       dismissDemo: () => set({ demoBanner: false }),
       connectSource: (channel) => {
-        const name = channel.trim();
+        const name = channelSlug(channel);
         if (!name) return;
         set({ channel: name, sourceConnected: true });
       },
@@ -175,7 +254,7 @@ export const useStudio = create<StudioState>()(
             set({ moments: [moment, ...get().moments].slice(0, 12) });
             return;
           }
-          const prompt = `Who takes the next round after: ${moment.description.toLowerCase()}?`;
+          const prompt = draftPrompt(moment.description);
           set({
             moments: [moment, ...get().moments].slice(0, 12),
             reviews: [
@@ -203,9 +282,7 @@ export const useStudio = create<StudioState>()(
           reviews = [
             {
               id: uid(),
-              prompt: m
-                ? `Who takes the next round after: ${m.description.toLowerCase()}?`
-                : "Who takes the next round?",
+              prompt: m ? draftPrompt(m.description) : draftPrompt(""),
               explanation: "Drafted from a confirmed moment. Evidence window is the current session.",
               status: "pending" as const,
             },
@@ -257,6 +334,46 @@ export const useStudio = create<StudioState>()(
         const amount = [10, 15, 25, 50][Math.floor(Math.random() * 4)];
         get().castVote(live.id, side, amount);
       },
+      captureFrame: () => {
+        const { sourceConnected, sessionLive, vision } = get();
+        if (!sourceConnected || !sessionLive) return;
+        const frame = VISION_FRAMES[vision.length % VISION_FRAMES.length];
+        const hit: VisionHit = { id: uid(), ...frame, proposed: false };
+        set({ vision: [hit, ...vision].slice(0, 8) });
+      },
+      proposeVision: (id) => {
+        const hit = get().vision.find((v) => v.id === id);
+        if (!hit || hit.proposed) return;
+        const moment: DetectedMoment = {
+          id: uid(),
+          description: `${hit.label} — ${hit.detail}`,
+          confidence: hit.confidence,
+          status: "under_review",
+        };
+        set({
+          vision: get().vision.map((v) => (v.id === id ? { ...v, proposed: true } : v)),
+          moments: [moment, ...get().moments].slice(0, 12),
+        });
+      },
+      pullEvidence: () => {
+        if (!get().sourceConnected || !get().sessionLive) {
+          const channel = get().channel.trim() || "studio";
+          set({ channel, sourceConnected: true, sessionLive: true, onboarded: true });
+        }
+        get().captureFrame();
+        const newest = get().vision[0];
+        if (newest && !newest.proposed) get().proposeVision(newest.id);
+      },
+      setStinger: (key, armed) => set({ stingers: { ...get().stingers, [key]: armed } }),
+      addSeat: (name, role) => {
+        const cleaned = name.trim().slice(0, 32);
+        if (!cleaned || cleaned.toLowerCase() === "kinggunn") return;
+        const seats = get().seats;
+        if (seats.length >= 4) return;
+        if (seats.some((seat) => seat.name.toLowerCase() === cleaned.toLowerCase())) return;
+        set({ seats: [...seats, { id: uid(), name: cleaned, role }] });
+      },
+      removeSeat: (id) => set({ seats: get().seats.filter((seat) => seat.id !== id) }),
       reset: () => set({ ...INITIAL }),
     }),
     {
@@ -274,7 +391,31 @@ export const useStudio = create<StudioState>()(
           winner: pool.winner ?? null,
           status: pool.status === "settled" ? ("settled" as const) : ("live" as const),
         }));
-        return { ...current, ...p, pools };
+        const vision = (p.vision ?? [])
+          .filter((hit) => hit && typeof hit.label === "string" && typeof hit.id === "string")
+          .slice(0, 8)
+          .map((hit) => ({
+            id: hit.id,
+            label: hit.label,
+            detail: typeof hit.detail === "string" ? hit.detail : "",
+            confidence: typeof hit.confidence === "number" ? hit.confidence : 0,
+            proposed: hit.proposed === true,
+          }));
+        const raw = p.stingers;
+        const stingers: StingerKit = {
+          open: typeof raw?.open === "boolean" ? raw.open : true,
+          settle: typeof raw?.settle === "boolean" ? raw.settle : true,
+          vote: raw?.vote === true,
+        };
+        const seats = (p.seats ?? [])
+          .filter((seat) => seat && typeof seat.id === "string" && typeof seat.name === "string")
+          .slice(0, 4)
+          .map((seat) => ({
+            id: seat.id,
+            name: seat.name.slice(0, 32),
+            role: seat.role === "mod" ? ("mod" as const) : ("producer" as const),
+          }));
+        return { ...current, ...p, pools, vision, stingers, seats };
       },
     },
   ),
